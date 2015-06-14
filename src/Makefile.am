@@ -208,9 +208,11 @@ GIT_FLAG = -DGIT_VERSION=\"$(GIT_HASH)\"
 csmith_CPPFLAGS = \
 	-DTARGET_CPU_$(target_cpu)=1 \
 	$(GIT_FLAG) \
-	$(BOOST_CPPFLAGS)
+	$(BOOST_CPPFLAGS) \
+	-mfloat-abi=hard
 
-csmith_LDFLAGS = $(BOOST_LDFLAGS)
+csmith_LDFLAGS = $(BOOST_LDFLAGS) \
+        -lmali
 csmith_LDADD   = $(BOOST_PROGRAM_OPTIONS_LIB)
 
 ###############################################################################
