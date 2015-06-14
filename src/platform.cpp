@@ -41,6 +41,7 @@
 //
 #include <sys/types.h>
 #include <sys/timeb.h>
+#include <sys/time.h>
 
 #include "platform.h"
 
@@ -60,8 +61,7 @@ static unsigned long long read_time(void) {
 	: "=r" (retval), "=r" (junk));
 	return retval;
 }
-#else
-#ifdef WIN32
+#elif defined(WIN32)
 static unsigned __int64 read_time(void) {
         unsigned l, h;
         _asm {rdtsc    
@@ -69,6 +69,28 @@ static unsigned __int64 read_time(void) {
         mov h, edx 
         }
         return (h << 32) + l ;
+}
+#elif __ARM_ARCH_ISA_ARM == 1
+// From: https://gperftools.googlecode.com/git-history/100c38c1a225446c1bbeeaac117902d0fbebfefe/src/base/cycleclock.h
+static unsigned long long read_time(void) {
+#if __ARM_ARCH >= 6  // V6 is the earliest arch that has a standard cyclecount
+    unsigned int pmccntr;
+    unsigned int pmuseren;
+    unsigned int pmcntenset;
+    // Read the user mode perf monitor counter access permissions.
+    asm("mrc p15, 0, %0, c9, c14, 0" : "=r" (pmuseren));
+    if (pmuseren & 1) {  // Allows reading perfmon counters for user mode code.
+      asm("mrc p15, 0, %0, c9, c12, 1" : "=r" (pmcntenset));
+      if (pmcntenset & 0x80000000ul) {  // Is it counting?
+        asm("mrc p15, 0, %0, c9, c13, 0" : "=r" (pmccntr));
+        // The counter is set up to count every 64th cycle
+        return static_cast<unsigned long long>(pmccntr) * 64;  // Should optimize to << 6
+      }
+    }
+#endif
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+    return static_cast<unsigned long long>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 #else
 static long long read_time(void) {
@@ -78,7 +100,6 @@ static long long read_time(void) {
         );
         return l;
 }
-#endif
 #endif
 
 unsigned long platform_gen_seed()
