@@ -9,12 +9,19 @@ SOURCES=CLOutputMgr.cpp CLProgramGenerator.cpp Globals.cpp CLRandomProgramGenera
 OBJS=$(filter-out ../csmith-RandomProgramGenerator.o, $(wildcard ../*.o)) $(SOURCES:.cpp=.o)
 BIN=CLSmith
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    OPENCL := -framework OpenCL
+else
+	OPENCL := -lOpenCL
+endif
+
 all: generator launcher
 
 generator: $(SOURCES) $(BIN)
 
 launcher: cl_launcher.c
-	gcc -Wall -I/homes/$(USER)/OpenCL/ cl_launcher.c -g -o cl_launcher -lOpenCL
+	gcc -Wall -I/homes/$(USER)/OpenCL/ cl_launcher.c -g -o cl_launcher $(OPENCL)
 
 $(BIN): $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o $@
