@@ -76,6 +76,7 @@ bool inter_thread_comm = false;
 // Data to free.
 char *source_text = NULL;
 char *buf = NULL;
+RES_TYPE * init_result = NULL;
 cl_uint *init_atomic_vals = NULL;
 cl_uint *init_special_vals = NULL;
 cl_int *global_reduction_target = NULL;
@@ -400,6 +401,7 @@ int main(int argc, char **argv) {
   free(global_size);
   free(platforms);
   free(devices);
+  free(init_result);
   
   if (atomics) {
     free(init_atomic_vals);
@@ -561,8 +563,12 @@ int run_on_platform_device(cl_platform_id *platform, cl_device_id *device, cl_ui
     return 1;
 
   // Create the buffer that will have the results.
+  init_result = (RES_TYPE*)malloc(sizeof(RES_TYPE) * total_threads);
+  int counter;
+  for (counter = 0; counter < total_threads; counter++)
+    init_result[counter] = 0;
   cl_mem result = clCreateBuffer(
-      context, CL_MEM_WRITE_ONLY, total_threads * sizeof(RES_TYPE), NULL, &err);
+      context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, total_threads * sizeof(RES_TYPE), init_result, &err);
   if (cl_error_check(err, "Error creating output buffer"))
     return 1;
   
