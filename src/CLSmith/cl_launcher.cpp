@@ -7,11 +7,12 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <array>
 #include <cassert>
 
 // Called if any error occurs during context creation or at kernel runtime.
 // This can be called many times asynchronously, so it must be thread safe.
-void errorCallback(const char *ErrorInfo, const void *PrivateInfo, size_t CB, void *UserData)
+void CL_CALLBACK errorCallback(const char *ErrorInfo, const void *PrivateInfo, size_t CB, void *UserData)
 {
     std::cerr << "Error found (callback):\n" << ErrorInfo << "\n";
     std::cerr.flush();
@@ -567,7 +568,7 @@ int main(int argc, char** argv)
             0
         };
 
-        cl::Context Context(PlatformDeviceConfig->second, ContextProperties, errorCallback, nullptr);
+        cl::Context Context(PlatformDeviceConfig->second, ContextProperties, errorCallback);
         cl::CommandQueue CommandQueue(Context, PlatformDeviceConfig->second);
 
         std::vector<cl::Device> Devices{PlatformDeviceConfig->second};

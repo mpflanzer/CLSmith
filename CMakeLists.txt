@@ -22,12 +22,8 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") OR (CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wno-long-long -Wall -std=c++11")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wno-long-long -Wall -std=c++14")
 endif()
-
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 add_definitions(-DGIT_VERSION=\"${CLSmith_GIT_HASH}\")
 add_definitions(-DTARGET_CPU_${CMAKE_SYSTEM_PROCESSOR}=1)
@@ -316,6 +312,7 @@ find_package(OpenCL)
 
 if(OpenCL_FOUND)
     include_directories(${OpenCL_INCLUDE_DIRS})
+
     add_executable(cl_launcher
         src/CLSmith/cl_launcher.c
     )
@@ -323,6 +320,17 @@ if(OpenCL_FOUND)
     target_link_libraries(cl_launcher ${OpenCL_LIBRARIES})
 
     install(TARGETS cl_launcher
+            RUNTIME DESTINATION bin
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
+
+    add_executable(cl_launcher++
+        src/CLSmith/cl_launcher.cpp
+    )
+
+    target_link_libraries(cl_launcher++ ${OpenCL_LIBRARIES})
+
+    install(TARGETS cl_launcher++
             RUNTIME DESTINATION bin
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     )
